@@ -13,7 +13,8 @@ function loop(){
 		.then(function(iss) {
 			var position = iss.body.iss_position;
 			var distanceFromIss = geolib.getDistance(myPosition, position);
-			console.log(`${distanceFromIss} meters`);
+			var distanceFromIssMiles = geolib.convertUnit('mi', distanceFromIss, 2);
+			console.log(`${distanceFromIssMiles} miles`);
 		})
 		.catch(function(error) {
 			console.log(error.response.body);
