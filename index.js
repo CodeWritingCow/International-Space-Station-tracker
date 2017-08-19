@@ -8,6 +8,7 @@ var moment = require('moment'); // module for formatting and parsing dates
 var loopSeconds = 10;
 var url = "http://api.open-notify.org/iss-now.json";
 var myPosition = { latitude: 40.712784, longitude: -74.005941 }; // Coordinates for New York, NY
+var urlIp = "http://ip-api.com/json"; // API that returns a user's IP address and location info. Limited to 150 requests per minute.
 
 var logDir = path.join(__dirname, 'logs');
 var dataLogFile = 'issResults.csv';
@@ -50,6 +51,28 @@ function logToFile(logFileName, dataToWrite, append = true) {
 	});
 }
 
+// navigator.geolocation is a browser API. It doesn't work in Node!
+// var myPosition = {};
+/*function getMyLocation(){
+	navigator.geolocation.getCurrentPosition(function(position){
+		var lat = position.coords.latitude;
+		var lng = position.coords.longitude;
+		console.log("latitude: " + lat + "; longitude: " + lng);
+	});
+}*/
+
+// get user IP address and location
+// TODO: Save coords to myPosition, so app can get distance between ISS and user location on Earth. 
+function getMyLocation() {
+	got(urlIp, {json: true })
+		.then(function(res) {
+			console.log("Your lat: " + res.body.lat + ", lon: " + res.body.lon);
+			console.log(res.body.city + ", " + res.body.region + ", " + res.body.countryCode);
+		})
+		.catch(function(error) {
+			console.log(error.response.body);
+		});
+}
 
 function loop(){
 	got(url, { json: true })
@@ -80,9 +103,10 @@ function loop(){
 			console.log(error.response.body);
 		});
 
-	// Get ISS position every 3 seconds
+	// Get ISS position every several seconds
 	setTimeout(loop, loopSeconds * 1000);
 }
 
 init();
+getMyLocation();
 loop();
