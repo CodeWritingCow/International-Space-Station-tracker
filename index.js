@@ -7,7 +7,7 @@ var moment = require('moment'); // module for formatting and parsing dates
 
 var loopSeconds = 10;
 var url = "http://api.open-notify.org/iss-now.json";
-var myPosition = { latitude: 40.712784, longitude: -74.005941 }; // Coordinates for New York, NY
+var myPosition = { latitude: 40.712784, longitude: -74.005941, city: "New York", region: "NY", countryCode: "US" }; // Set default coordinates to New York, NY
 var urlIp = "http://ip-api.com/json"; // API that returns a user's IP address and location info. Limited to 150 requests per minute.
 
 var logDir = path.join(__dirname, 'logs');
@@ -51,23 +51,18 @@ function logToFile(logFileName, dataToWrite, append = true) {
 	});
 }
 
-// navigator.geolocation is a browser API. It doesn't work in Node!
-// var myPosition = {};
-/*function getMyLocation(){
-	navigator.geolocation.getCurrentPosition(function(position){
-		var lat = position.coords.latitude;
-		var lng = position.coords.longitude;
-		console.log("latitude: " + lat + "; longitude: " + lng);
-	});
-}*/
-
 // get user IP address and location
-// TODO: Save coords to myPosition, so app can get distance between ISS and user location on Earth. 
 function getMyLocation() {
 	got(urlIp, {json: true })
 		.then(function(res) {
-			console.log("Your lat: " + res.body.lat + ", lon: " + res.body.lon);
-			console.log(res.body.city + ", " + res.body.region + ", " + res.body.countryCode);
+			console.log("myPos lat: " + myPosition.latitude + ", lon: " + myPosition.longitude + ", " + myPosition.city + ", " + myPosition.region + ", " + myPosition.countryCode);
+			myPosition.latitude = res.body.lat;
+			myPosition.longitude = res.body.lon;
+			myPosition.city = res.body.city;
+			myPosition.region = res.body.region;
+			myPosition.countryCode = res.body.countryCode;
+			console.log("urlIp lat: " + res.body.lat + ", lon: " + res.body.lon + ", " + res.body.city + ", " + res.body.region + ", " + res.body.countryCode);
+			console.log("myPos lat: " + myPosition.latitude + ", lon: " + myPosition.longitude + ", " + myPosition.city + ", " + myPosition.region + ", " + myPosition.countryCode);
 		})
 		.catch(function(error) {
 			console.log(error.response.body);
@@ -84,6 +79,7 @@ function loop(){
 			var distanceFromIssMiles = geolib.convertUnit('mi', distanceFromIss, 2);
 			
 			console.log(`${distanceFromIssMiles} miles`);
+			//console.log("myPosition updated -- lat: " + myPosition.latitude + ", lon: " + myPosition.longitude + ", " + myPosition.city + ", " + myPosition.region + ", " + myPosition.countryCode);
 			logToFile(dataLogFile, distanceFromIssMiles);
 
 			if (distanceFromIssMiles < closestDistance) {
