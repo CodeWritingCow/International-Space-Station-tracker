@@ -1,24 +1,24 @@
-var got = require('got'); // NPM module for getting Web content with JavaScript promises
-var geolib = require('geolib'); // module for calculating distance, etc.
-var fs = require('fs');
-var path = require('path');
-var eol = require('os').EOL; // returns end-of-line marker for current OS
-var moment = require('moment'); // module for formatting and parsing dates
+const got = require('got'); // NPM module for getting Web content with JavaScript promises
+const geolib = require('geolib'); // module for calculating distance, etc.
+const fs = require('fs');
+const path = require('path');
+const eol = require('os').EOL; // returns end-of-line marker for current OS
+const moment = require('moment'); // module for formatting and parsing dates
 
-var loopSeconds = 10;
-var url = "http://api.open-notify.org/iss-now.json";
-var myPosition = { latitude: 40.712784, longitude: -74.005941, city: "New York", region: "NY", countryCode: "US" }; // Set default coordinates to New York, NY
-var urlIp = "http://ip-api.com/json"; // API that returns a user's IP address and location info. Limited to 150 requests per minute.
+const loopSeconds = 10;
+const url = "http://api.open-notify.org/iss-now.json";
+const myPosition = { latitude: 40.712784, longitude: -74.005941, city: "New York", region: "NY", countryCode: "US" }; // Set default coordinates to New York, NY
+const urlIp = "http://ip-api.com/json"; // API that returns a user's IP address and location info. Limited to 150 requests per minute.
 
-var logDir = path.join(__dirname, 'logs');
-var dataLogFile = 'issResults.csv';
+const logDir = path.join(__dirname, 'logs');
+const dataLogFile = 'issResults.csv';
 
-var currentDateTime = moment().format('YYMMDD[T]HHmmss');
-var closestDistanceFile = "issClosest-" + currentDateTime + ".csv";
-var furthestDistanceFile = "issFurthest-" + currentDateTime + ".csv";
+const currentDateTime = moment().format('YYMMDD[T]HHmmss');
+const closestDistanceFile = `issClosest-${currentDateTime}.csv`;
+const furthestDistanceFile = `issFurthest-${currentDateTime}.csv`;
 
-var closestDistance = Number.MAX_VALUE;
-var furthestDistance = Number.MIN_VALUE;
+let closestDistance = Number.MAX_VALUE;
+let furthestDistance = Number.MIN_VALUE;
 
 // check if directory exists
 function directoryExists(filePath) {
@@ -38,15 +38,15 @@ function init() {
 
 // log data with timestamp into csv file
 function logToFile(logFileName, dataToWrite, append = true) {
-	var logFilePath = path.join(logDir, logFileName);
-	var timestamp = new Date().toLocaleString();
-	var data = timestamp + ', ' + dataToWrite + eol;
+	let logFilePath = path.join(logDir, logFileName);
+	let timestamp = new Date().toLocaleString();
+	let data = `${timestamp} , ${dataToWrite} ${eol}`;
 
-	var flags = append ? {flag: 'a' } : {};
+	let flags = append ? {flag: 'a' } : {};
 
-	fs.writeFile(logFilePath, data, flags, function(error) {
+	fs.writeFile(logFilePath, data, flags, (error) => {
 		if (error) {
-			console.log('Write error to ' + logFileName + ': ' + error.message);
+			console.log(`Write error to ${logFileName} : ${error.message}`);
 		}
 	});
 }
@@ -54,17 +54,17 @@ function logToFile(logFileName, dataToWrite, append = true) {
 // get user IP address and location
 function getMyLocation() {
 	got(urlIp, {json: true })
-		.then(function(res) {
-			console.log("myPos lat: " + myPosition.latitude + ", lon: " + myPosition.longitude + ", " + myPosition.city + ", " + myPosition.region + ", " + myPosition.countryCode);
+		.then((res) => {
+			console.log(`myPos lat: ${myPosition.latitude}, lon: ${myPosition.longitude}, ${myPosition.city}, ${myPosition.region}, ${myPosition.countryCode}`);
 			myPosition.latitude = res.body.lat;
 			myPosition.longitude = res.body.lon;
 			myPosition.city = res.body.city;
 			myPosition.region = res.body.region;
 			myPosition.countryCode = res.body.countryCode;
-			console.log("urlIp lat: " + res.body.lat + ", lon: " + res.body.lon + ", " + res.body.city + ", " + res.body.region + ", " + res.body.countryCode);
-			console.log("myPos lat: " + myPosition.latitude + ", lon: " + myPosition.longitude + ", " + myPosition.city + ", " + myPosition.region + ", " + myPosition.countryCode);
+			console.log(`urlIp lat: ${res.body.lat}, lon: ${res.body.lon}, ${res.body.city}, ${res.body.region}, ${res.body.countryCode}`);
+			console.log(`myPos lat: ${myPosition.latitude}, lon: ${myPosition.longitude}, ${myPosition.city}, ${myPosition.region}, ${myPosition.countryCode}`);
 		})
-		.catch(function(error) {
+		.catch((error) => {
 			console.log(error.response.body);
 		});
 }
@@ -73,10 +73,10 @@ function loop(){
 	got(url, { json: true })
 
 		// Get current ISS coordinates
-		.then(function(iss) {
-			var position = iss.body.iss_position;
-			var distanceFromIss = geolib.getDistance(myPosition, position);
-			var distanceFromIssMiles = geolib.convertUnit('mi', distanceFromIss, 2);
+		.then((iss) => {
+			let position = iss.body.iss_position;
+			let distanceFromIss = geolib.getDistance(myPosition, position);
+			let distanceFromIssMiles = geolib.convertUnit('mi', distanceFromIss, 2);
 			
 			console.log(`${distanceFromIssMiles} miles`);
 			//console.log("myPosition updated -- lat: " + myPosition.latitude + ", lon: " + myPosition.longitude + ", " + myPosition.city + ", " + myPosition.region + ", " + myPosition.countryCode);
@@ -84,18 +84,18 @@ function loop(){
 
 			if (distanceFromIssMiles < closestDistance) {
 				closestDistance = distanceFromIssMiles;
-				console.log("Closer than ever: " + closestDistance);
+				console.log(`Closer than ever: ${closestDistance}`);
 				logToFile(closestDistanceFile, closestDistance, false);
 			}
 
 			if (distanceFromIssMiles > furthestDistance) {
 				furthestDistance = distanceFromIssMiles;
-				console.log("Further than ever: " + furthestDistance);
+				console.log(`Further than ever: ${furthestDistance}`);
 				logToFile(furthestDistanceFile, furthestDistance, false);
 			}
 
 		})
-		.catch(function(error) {
+		.catch((error) => {
 			console.log(error.response.body);
 		});
 
@@ -106,3 +106,5 @@ function loop(){
 init();
 getMyLocation();
 loop();
+
+module.exports.getMyLocation = getMyLocation;
